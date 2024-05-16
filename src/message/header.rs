@@ -1,5 +1,6 @@
 use anyhow::{Result, anyhow};
 
+#[derive(Debug)]
 pub struct Header {
     // 16 bits
     pub id: u16,

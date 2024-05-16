@@ -34,9 +34,9 @@ fn build_response(request: Message) -> Message {
 
     Message {
         header: Header::builder()
-            .qdcount(1)
+            .qdcount(questions.len() as u16)
             .unwrap()
-            .ancount(1)
+            .ancount(answers.len() as u16)
             .unwrap()
             .id(request.header.id)
             .unwrap()

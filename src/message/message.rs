@@ -21,15 +21,13 @@ impl Message {
     }
 
     pub fn decode(bytes: &[u8]) -> Self {
-        let mut offset = 0 as usize;
-        let header = Header::decode(&bytes[offset..]).unwrap();
-        offset = 12;
-        let mut questions = vec![];
-        for _ in 0..header.qdcount {
-            let question = Question::decode(&bytes[offset..]);
-            offset += question.len();
-            questions.push(question);
-        }
+        let header = Header::decode(bytes).unwrap();
+        let header_offset = 12;
+        let questions = Question::decode(
+            &bytes[header_offset..], 
+            header.qdcount as usize,
+            header_offset,
+        );
 
         Message {
             header: header,

@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use anyhow::{Result, Ok};
 
 #[derive(Debug)]
@@ -24,16 +26,159 @@ impl Question {
         QuestionBuilder::new()
     }
 
-    pub fn decode(bytes: &[u8]) -> Question {
-        let mut name_end = 0;
-        while bytes[name_end] != 0 {
-            name_end += bytes[name_end] as usize + 1;
+    pub fn decode(bytes: &[u8], qncount: usize, header_offset: usize) -> Vec<Question> {
+        #[derive(Debug)]
+        enum LabelOrPointer {
+            Label(Vec<u8>),
+            Pointer(usize),
+            QType(Vec<u8>),
+            QClass(Vec<u8>),
+            Stop,
         }
-        Question {
-            name: bytes[..name_end].to_vec(),
-            qtype: ((bytes[name_end + 1] as u16) << 8) | bytes[name_end + 2] as u16,
-            qclass: ((bytes[name_end + 3] as u16) << 8) | bytes[name_end + 4] as u16,
+        let mut tokens = vec![];
+        let mut cur = 0;
+        let mut cnt = 0;
+        let mut label_index = HashMap::new();
+
+        while cnt < qncount {
+            loop {
+                if bytes[cur] == 0 {
+                    tokens.push(LabelOrPointer::Stop);
+                    cur += 1;
+                    tokens.push(
+                        LabelOrPointer::QType(
+                            bytes[cur .. cur + 2].to_vec()
+                        )
+                    );
+                    tokens.push(
+                        LabelOrPointer::QClass(
+                            bytes[cur + 2 .. cur + 4].to_vec()
+                        )
+                    );
+                    cur += 4;
+                    break;
+                }
+                let head = (bytes[cur] >> 6) & 0b11;
+                if head == 0b00 {
+                    label_index.insert(cur + header_offset, tokens.len());
+                    let len = bytes[cur] as usize;
+                    tokens.push(
+                        LabelOrPointer::Label(
+                            bytes[cur..=cur+len].to_vec()
+                        )
+                    );
+                    cur += len + 1;
+                }
+                else if head == 0b11 {
+                    let pointer = (
+                        (
+                            (bytes[cur] & 0x3f) as u16
+                        ) << 8
+                    ) 
+                    | bytes[cur+1] as u16;
+                    tokens.push(
+                        LabelOrPointer::Pointer(pointer as usize)
+                    );
+                    cur += 2;
+                    tokens.push(
+                        LabelOrPointer::QType(
+                            bytes[cur .. cur + 2].to_vec()
+                        )
+                    );
+                    tokens.push(
+                        LabelOrPointer::QClass(
+                            bytes[cur + 2 .. cur + 4].to_vec()
+                        )
+                    );
+                    cur += 4;
+                    break;
+                }
+                else {
+                    panic!("Not a label or pointer");
+                }
+            }
+            cnt += 1;
         }
+
+        // println!("{:#?}", tokens);
+        // println!("{:#?}", label_index);
+
+        let mut next = 0;
+
+        let mut questions = vec![];
+        for _ in 0..qncount {
+            let mut name: Vec<u8> = vec![];
+            let mut q_class: Option<Vec<u8>> = None;
+            let mut q_type: Option<Vec<u8>> = None;
+
+            let mut jumped = false;
+            let mut cursor = next;
+            loop {
+                match tokens[cursor] {
+                    LabelOrPointer::Label(ref label) => {
+                        name.extend(label);
+                        cursor += 1;
+                        if !jumped {
+                            next = cursor;
+                        }
+                    }
+                    LabelOrPointer::Pointer(pointer) => {
+                        if !jumped {
+                            next = cursor + 1;
+                            q_type = Some(
+                                if let LabelOrPointer::QType(ref q_type) = tokens[next] {
+                                    q_type.clone()
+                                } else {
+                                    panic!("Expect a QType after Pointer, got {:?}", tokens[next]);
+                                }
+                            );
+
+                            q_class = Some(
+                                if let LabelOrPointer::QClass(ref q_class) = tokens[next + 1] {
+                                    q_class.clone()
+                                } else {
+                                    panic!("Expect a QClass after Pointer, got {:?}", tokens[next + 1]);
+                                }
+                            );
+                            next += 2;
+                            jumped = true;
+                        }
+                        cursor = *label_index.get(&pointer).unwrap();
+                    }
+                    LabelOrPointer::Stop => {
+                        next += 1;
+                        if !jumped {
+                            q_type = Some(
+                                if let LabelOrPointer::QType(ref q_type) = tokens[next] {
+                                    q_type.clone()
+                                } else {
+                                    panic!("Expect a QType after Stop, got {:?}", tokens[next]);
+                                }
+                            );
+                            q_class = Some(
+                                if let LabelOrPointer::QClass(ref q_class) = tokens[next + 1] {
+                                    q_class.clone()
+                                } else {
+                                    panic!("Expect a QClass after Stop, got {:?}", tokens[next + 1]);
+                                }
+                            );
+                            next += 2;
+                        }
+                        break;
+                    }
+                    _ => {
+                        panic!("Not a label or pointer");
+                    }
+                }
+            }
+            questions.push(Question {
+                name,
+                qtype: u16::from_be_bytes(q_type.unwrap().try_into().unwrap()),
+                qclass: u16::from_be_bytes(q_class.unwrap().try_into().unwrap()),
+            });
+        }
+
+        questions
     }
 
     pub fn len(&self) -> usize {

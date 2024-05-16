@@ -1,14 +1,6 @@
-/*
-
-Field	Expected Value
-Name	\x0ccodecrafters\x02io followed by a null byte (that's codecrafters.io encoded as a label sequence)
-Type	1 encoded as a 2-byte big-endian int (corresponding to the "A" record type)
-Class	1 encoded as a 2-byte big-endian int (corresponding to the "IN" record class)
-TTL	Any value, encoded as a 4-byte big-endian int. For example: 60.
-Length	4, encoded as a 2-byte big-endian int (corresponds to the length of the RDATA field)
-Data	Any IP address, encoded as a 4-byte big-endian int. For example: \x08\x08\x08\x08 (that's 8.8.8.8 encoded as a 4-byte integer) */
 use anyhow::{Result, Ok};
 
+#[derive(Debug)]
 pub struct Answer {
     pub name: Vec<u8>,
     pub qtype: u16,

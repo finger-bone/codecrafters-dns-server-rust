@@ -1,5 +1,6 @@
 use crate::{message::{Header, Question}, Answer};
 
+#[derive(Debug)]
 pub struct Message {
     pub header: Header,
     pub questions: Vec<Question>,

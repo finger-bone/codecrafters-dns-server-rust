@@ -1,5 +1,6 @@
 use anyhow::{Result, Ok};
 
+#[derive(Debug)]
 pub struct Question {
     pub name: Vec<u8>,
     pub qtype: u16,

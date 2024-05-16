@@ -2,7 +2,7 @@ mod message;
 
 use std::net::UdpSocket;
 
-use crate::{header::Header, message::{message::Message, *}, question::Question};
+use crate::message::*;
 
 fn main() {
     let udp_socket = UdpSocket::bind("127.0.0.1:2053").expect("Failed to bind to address");
@@ -16,7 +16,8 @@ fn main() {
                     header: Header::builder().qdcount(1).unwrap().build(),
                     questions: vec![
                         Question::builder().build()
-                    ]
+                    ],
+                    answer: Answer::builder().build(),
                 };
                 udp_socket
                     .send_to(&response.encode(), source)

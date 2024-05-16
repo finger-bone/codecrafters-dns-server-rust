@@ -1,8 +1,9 @@
-use crate::{message::Header, question::Question};
+use crate::{message::{Header, Question}, Answer};
 
 pub struct Message {
     pub header: Header,
     pub questions: Vec<Question>,
+    pub answer: Answer,
 }
 
 impl Message {
@@ -12,6 +13,7 @@ impl Message {
         for question in self.questions {
             bytes.extend(question.encode());
         }
+        bytes.extend(self.answer.encode());
         bytes
     }
 }

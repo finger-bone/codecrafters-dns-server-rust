@@ -34,6 +34,10 @@ fn build_response(request: Message) -> Message {
 
     Message {
         header: Header::builder()
+            .qdcount(1)
+            .unwrap()
+            .ancount(1)
+            .unwrap()
             .id(request.header.id)
             .unwrap()
             .opcode(request.header.opcode)
@@ -41,10 +45,6 @@ fn build_response(request: Message) -> Message {
             .rd(request.header.rd)
             .unwrap()
             .rcode(if request.header.opcode == 0 { 0 } else { 4 })
-            .unwrap()
-            .qdcount(questions.len() as u16)
-            .unwrap()
-            .ancount(answers.len() as u16)
             .unwrap()
             .build(),
         questions,
@@ -63,27 +63,8 @@ fn main() {
 
                 let request = Message::decode(&buf);
 
-                let response = Message {
-                    header: Header::builder()
-                        .qdcount(1)
-                        .unwrap()
-                        .ancount(1)
-                        .unwrap()
-                        .id(request.header.id)
-                        .unwrap()
-                        .opcode(request.header.opcode)
-                        .unwrap()
-                        .rd(request.header.rd)
-                        .unwrap()
-                        .rcode(if request.header.opcode == 0 { 0 } else { 4 })
-                        .unwrap()
-                        .build(),
-                    questions: vec![Question::builder().build()],
-                    answers: vec![Answer::builder().build()],
-                };
-
                 udp_socket
-                    .send_to(&response.encode(), source)
+                    .send_to(&build_response(request).encode(), source)
                     .expect("Failed to send response");
             }
             Err(e) => {

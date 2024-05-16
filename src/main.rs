@@ -27,6 +27,8 @@ fn main() {
                         .unwrap()
                         .rd(request.header.rd)
                         .unwrap()
+                        .rcode(if request.header.opcode == 0 { 0 } else { 4 })
+                        .unwrap()
                         .build(),
                     questions: vec![
                         Question::builder().build()

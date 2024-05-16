@@ -25,7 +25,7 @@ fn build_response(request: Message) -> Message {
             .unwrap()
             .length(4)
             .unwrap()
-            .data(vec![127, 0, 0, 1])
+            .data(vec![8, 8, 8, 8])
             .unwrap()
             .build();
         questions.push(response_question);
@@ -47,8 +47,8 @@ fn build_response(request: Message) -> Message {
             .rcode(if request.header.opcode == 0 { 0 } else { 4 })
             .unwrap()
             .build(),
-        questions,
-        answers,
+        questions: questions,
+        answers: answers,
     }
 }
 

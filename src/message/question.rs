@@ -7,6 +7,7 @@ pub struct Question {
     pub qclass: u16,
 }
 
+#[allow(dead_code)]
 impl Question {
     pub fn encode(self) -> Vec<u8> {
         let mut bytes = vec![];
@@ -24,23 +25,14 @@ impl Question {
     }
 
     pub fn decode(bytes: &[u8]) -> Question {
-        let mut name = vec![];
-        let mut i = 0;
-        loop {
-            let len = bytes[i] as usize;
-            if len == 0 {
-                break;
-            }
-            if i > 0 {
-                name.push(b'.');
-            }
-            name.extend_from_slice(&bytes[i + 1..i + 1 + len]);
-            i += len + 1;
+        let mut name_end = 0;
+        while bytes[name_end] != 0 {
+            name_end += bytes[name_end] as usize + 1;
         }
         Question {
-            name,
-            qtype: ((bytes[i + 1] as u16) << 8) | bytes[i + 2] as u16,
-            qclass: ((bytes[i + 3] as u16) << 8) | bytes[i + 4] as u16,
+            name: bytes[..name_end].to_vec(),
+            qtype: ((bytes[name_end + 1] as u16) << 8) | bytes[name_end + 2] as u16,
+            qclass: ((bytes[name_end + 3] as u16) << 8) | bytes[name_end + 4] as u16,
         }
     }
 

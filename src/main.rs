@@ -62,9 +62,9 @@ fn main() {
                 println!("Received {} bytes from {}", size, source);
 
                 let request = Message::decode(&buf);
-                let response = build_response(request);
-
                 println!("Got Request {:#?}", request);
+
+                let response = build_response(request);
                 println!("Responding With: {:#?}", response);
 
                 udp_socket

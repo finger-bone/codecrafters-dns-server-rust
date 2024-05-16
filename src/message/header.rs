@@ -48,6 +48,57 @@ impl Header {
         bytes.push((self.arcount & 0xFF) as u8);
         bytes
     }
+
+    pub fn decode(bytes: &[u8]) -> Result<Header> {
+        if bytes.len() < 12 {
+            return Err(anyhow!("Header must be at least 12 bytes"));
+        }
+        let id = ((bytes[0] as u16) << 8) | bytes[1] as u16;
+        let flags1 = bytes[2];
+        let qr = (flags1 >> 7) & 1 == 1;
+        let opcode = (flags1 >> 3) & 0b1111;
+        let aa = (flags1 >> 2) & 1 == 1;
+        let tc = (flags1 >> 1) & 1 == 1;
+        let rd = flags1 & 1 == 1;
+        let flags2 = bytes[3];
+        let ra = (flags2 >> 7) & 1 == 1;
+        let z = (flags2 >> 4) & 0b111;
+        let rcode = flags2 & 0b1111;
+        let qdcount = ((bytes[4] as u16) << 8) | bytes[5] as u16;
+        let ancount = ((bytes[6] as u16) << 8) | bytes[7] as u16;
+        let nscount = ((bytes[8] as u16) << 8) | bytes[9] as u16;
+        let arcount = ((bytes[10] as u16) << 8) | bytes[11] as u16;
+        Ok(
+            Header::builder()
+                .id(id)
+                .unwrap()
+                .qr(qr)
+                .unwrap()
+                .opcode(opcode)
+                .unwrap()
+                .aa(aa)
+                .unwrap()
+                .tc(tc)
+                .unwrap()
+                .rd(rd)
+                .unwrap()
+                .ra(ra)
+                .unwrap()
+                .z(z)
+                .unwrap()
+                .rcode(rcode)
+                .unwrap()
+                .qdcount(qdcount)
+                .unwrap()
+                .ancount(ancount)
+                .unwrap()
+                .nscount(nscount)
+                .unwrap()
+                .arcount(arcount)
+                .unwrap()
+                .build()
+        )
+    }
 }
 pub struct HeaderBuilder {
     id: Option<u16>,

@@ -16,4 +16,13 @@ impl Message {
         bytes.extend(self.answer.encode());
         bytes
     }
+
+    pub fn decode(bytes: &[u8]) -> Self {
+        let header = Header::decode(bytes).unwrap();
+        Message {
+            header: header,
+            questions: vec![],
+            answer: Answer::builder().build()
+        }
+    }
 }

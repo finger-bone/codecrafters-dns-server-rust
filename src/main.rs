@@ -12,13 +12,22 @@ fn main() {
         match udp_socket.recv_from(&mut buf) {
             Ok((size, source)) => {
                 println!("Received {} bytes from {}", size, source);
+
+                let request = Message::decode(&buf);
+
                 let response = Message {
                     header: Header::builder()
-                    .qdcount(1)
-                    .unwrap()
-                    .ancount(1)
-                    .unwrap()
-                    .build(),
+                        .qdcount(1)
+                        .unwrap()
+                        .ancount(1)
+                        .unwrap()
+                        .id(request.header.id)
+                        .unwrap()
+                        .opcode(request.header.opcode)
+                        .unwrap()
+                        .rd(request.header.rd)
+                        .unwrap()
+                        .build(),
                     questions: vec![
                         Question::builder().build()
                     ],

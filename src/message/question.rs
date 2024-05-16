@@ -74,6 +74,11 @@ impl QuestionBuilder {
         Ok(self)
     }
 
+    pub fn name_bytes(mut self, name: Vec<u8>) -> Result<Self> {
+        self.name = Some(name);
+        Ok(self)
+    }
+
     pub fn qtype(mut self, qtype: u16) -> Self {
         self.qtype = Some(qtype);
         self

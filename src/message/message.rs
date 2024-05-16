@@ -24,25 +24,16 @@ impl Message {
         let header = Header::decode(&bytes[offset..]).unwrap();
         offset = 12;
         let mut questions = vec![];
-        let mut answers = vec![];
         for _ in 0..header.qdcount {
             let question = Question::decode(&bytes[offset..]);
             offset += question.len();
-            let domain_name = question.name.clone();
             questions.push(question);
-
-            answers.push(
-                Answer::builder()
-                    .name_bytes(domain_name)
-                    .unwrap()
-                    .build()
-            );
         }
 
         Message {
             header: header,
             questions: questions,
-            answers: answers
+            answers: vec![]
         }
     }
 }

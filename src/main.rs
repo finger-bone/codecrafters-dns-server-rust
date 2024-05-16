@@ -4,6 +4,68 @@ use std::net::UdpSocket;
 
 use crate::message::*;
 
+fn build_response(request: Message) -> Message {
+    let mut answers = vec![];
+    let mut questions = vec![];
+
+    for question in request.questions {
+
+        let response_question = Question::builder()
+            .name_bytes(question.name.clone())
+            .unwrap()
+            .build();
+        let response_answer = Answer::builder()
+            .name_bytes(question.name.clone())
+            .unwrap()
+            .qtype(question.qtype)
+            .unwrap()
+            .qclass(question.qclass)
+            .unwrap()
+            .ttl(60)
+            .unwrap()
+            .length(4)
+            .unwrap()
+            .data(vec![127, 0, 0, 1])
+            .unwrap()
+            .build();
+        questions.push(response_question);
+        answers.push(response_answer);
+    }
+
+    Message {
+        header: Header::builder()
+            .id(request.header.id)
+            .unwrap()
+            .qr(true)
+            .unwrap()
+            .opcode(request.header.opcode)
+            .unwrap()
+            .aa(true)
+            .unwrap()
+            .tc(false)
+            .unwrap()
+            .rd(request.header.rd)
+            .unwrap()
+            .ra(false)
+            .unwrap()
+            .z(0)
+            .unwrap()
+            .rcode(0)
+            .unwrap()
+            .qdcount(request.header.qdcount)
+            .unwrap()
+            .ancount(answers.len() as u16)
+            .unwrap()
+            .nscount(0)
+            .unwrap()
+            .arcount(0)
+            .unwrap()
+            .build(),
+        questions,
+        answers,
+    }
+}
+
 fn main() {
     let udp_socket = UdpSocket::bind("127.0.0.1:2053").expect("Failed to bind to address");
     let mut buf = [0; 512];
@@ -15,30 +77,8 @@ fn main() {
 
                 let request = Message::decode(&buf);
 
-                let response = Message {
-                    header: Header::builder()
-                        .qdcount(1)
-                        .unwrap()
-                        .ancount(1)
-                        .unwrap()
-                        .id(request.header.id)
-                        .unwrap()
-                        .opcode(request.header.opcode)
-                        .unwrap()
-                        .rd(request.header.rd)
-                        .unwrap()
-                        .rcode(if request.header.opcode == 0 { 0 } else { 4 })
-                        .unwrap()
-                        .build(),
-                    questions: vec![
-                        Question::builder().build()
-                    ],
-                    answers: vec![
-                        Answer::builder().build()
-                    ],
-                };
                 udp_socket
-                    .send_to(&response.encode(), source)
+                    .send_to(&build_response(request).encode(), source)
                     .expect("Failed to send response");
             }
             Err(e) => {

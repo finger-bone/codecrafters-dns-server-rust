@@ -79,29 +79,29 @@ impl AnswerBuilder {
         Ok(self)
     }
 
-    pub fn qtype(mut self, qtype: u16) -> Self {
+    pub fn qtype(mut self, qtype: u16) -> Result<Self> {
         self.qtype = Some(qtype);
-        self
+        Ok(self)
     }
 
-    pub fn qclass(mut self, qclass: u16) -> Self {
+    pub fn qclass(mut self, qclass: u16) -> Result<Self> {
         self.qclass = Some(qclass);
-        self
+        Ok(self)
     }
 
-    pub fn ttl(mut self, ttl: u32) -> Self {
+    pub fn ttl(mut self, ttl: u32) -> Result<Self> {
         self.ttl = Some(ttl);
-        self
+        Ok(self)
     }
 
-    pub fn length(mut self, length: u16) -> Self {
+    pub fn length(mut self, length: u16) -> Result<Self> {
         self.length = Some(length);
-        self
+        Ok(self)
     }
 
-    pub fn data(mut self, data: Vec<u8>) -> Self {
+    pub fn data(mut self, data: Vec<u8>) -> Result<Self> {
         self.data = Some(data);
-        self
+        Ok(self)
     }
 
     pub fn build(mut self) -> Answer {

@@ -13,7 +13,12 @@ fn main() {
             Ok((size, source)) => {
                 println!("Received {} bytes from {}", size, source);
                 let response = Message {
-                    header: Header::builder().qdcount(1).unwrap().build(),
+                    header: Header::builder()
+                    .qdcount(1)
+                    .unwrap()
+                    .ancount(1)
+                    .unwrap()
+                    .build(),
                     questions: vec![
                         Question::builder().build()
                     ],

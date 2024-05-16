@@ -1,17 +1,9 @@
-/*
-
-Field	Expected value
-Name	\x0ccodecrafters\x02io followed by a null byte (that's codecrafters.io encoded as a label sequence)
-Type	1 encoded as a 2-byte big-endian int (corresponding to the "A" record type)
-Class	1 encoded as a 2-byte big-endian int (corresponding to the "IN" record class)
-Make sure to update the QDCOUNT field in the header section accordingly, and remember to set the id to 1234. */
-
 use anyhow::{Result, Ok};
 
 pub struct Question {
-    name: Vec<u8>,
-    qtype: u16,
-    qclass: u16,
+    pub name: Vec<u8>,
+    pub qtype: u16,
+    pub qclass: u16,
 }
 
 impl Question {
@@ -28,6 +20,31 @@ impl Question {
 
     pub fn builder() -> QuestionBuilder {
         QuestionBuilder::new()
+    }
+
+    pub fn decode(bytes: &[u8]) -> Question {
+        let mut name = vec![];
+        let mut i = 0;
+        loop {
+            let len = bytes[i] as usize;
+            if len == 0 {
+                break;
+            }
+            if i > 0 {
+                name.push(b'.');
+            }
+            name.extend_from_slice(&bytes[i + 1..i + 1 + len]);
+            i += len + 1;
+        }
+        Question {
+            name,
+            qtype: ((bytes[i + 1] as u16) << 8) | bytes[i + 2] as u16,
+            qclass: ((bytes[i + 3] as u16) << 8) | bytes[i + 4] as u16,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.name.len() + 6
     }
 }
 

@@ -3,7 +3,7 @@ use crate::{message::{Header, Question}, Answer};
 pub struct Message {
     pub header: Header,
     pub questions: Vec<Question>,
-    pub answer: Answer,
+    pub answers: Vec<Answer>,
 }
 
 impl Message {
@@ -13,16 +13,36 @@ impl Message {
         for question in self.questions {
             bytes.extend(question.encode());
         }
-        bytes.extend(self.answer.encode());
+        for answer in self.answers {
+            bytes.extend(answer.encode());
+        }
         bytes
     }
 
     pub fn decode(bytes: &[u8]) -> Self {
-        let header = Header::decode(bytes).unwrap();
+        let mut offset = 0 as usize;
+        let header = Header::decode(&bytes[offset..]).unwrap();
+        offset = 12;
+        let mut questions = vec![];
+        let mut answers = vec![];
+        for _ in 0..header.qdcount {
+            let question = Question::decode(&bytes[offset..]);
+            offset += question.len();
+            let domain_name = question.name.clone();
+            questions.push(question);
+
+            answers.push(
+                Answer::builder()
+                    .name_bytes(domain_name)
+                    .unwrap()
+                    .build()
+            );
+        }
+
         Message {
             header: header,
-            questions: vec![],
-            answer: Answer::builder().build()
+            questions: questions,
+            answers: answers
         }
     }
 }

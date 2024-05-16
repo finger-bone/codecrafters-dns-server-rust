@@ -33,7 +33,9 @@ fn main() {
                     questions: vec![
                         Question::builder().build()
                     ],
-                    answer: Answer::builder().build(),
+                    answers: vec![
+                        Answer::builder().build()
+                    ],
                 };
                 udp_socket
                     .send_to(&response.encode(), source)

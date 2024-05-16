@@ -10,12 +10,12 @@ Data	Any IP address, encoded as a 4-byte big-endian int. For example: \x08\x08\x
 use anyhow::{Result, Ok};
 
 pub struct Answer {
-    name: Vec<u8>,
-    qtype: u16,
-    qclass: u16,
-    ttl: u32,
-    length: u16,
-    data: Vec<u8>,
+    pub name: Vec<u8>,
+    pub qtype: u16,
+    pub qclass: u16,
+    pub ttl: u32,
+    pub length: u16,
+    pub data: Vec<u8>,
 }
 
 impl Answer {
@@ -71,6 +71,11 @@ impl AnswerBuilder {
             name_bytes.extend(label.as_bytes());
         }
         self.name = Some(name_bytes);
+        Ok(self)
+    }
+
+    pub fn name_bytes(mut self, name: Vec<u8>) -> Result<Self> {
+        self.name = Some(name);
         Ok(self)
     }
 

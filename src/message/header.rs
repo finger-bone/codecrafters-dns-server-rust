@@ -48,7 +48,6 @@ impl Header {
         bytes
     }
 }
-
 pub struct HeaderBuilder {
     id: Option<u16>,
     qr: Option<bool>,
@@ -65,6 +64,7 @@ pub struct HeaderBuilder {
     arcount: Option<u16>
 }
 
+#[allow(dead_code)]
 impl HeaderBuilder {
 
     pub fn new() -> HeaderBuilder {
@@ -86,9 +86,6 @@ impl HeaderBuilder {
     }
 
     pub fn id(mut self, id: u16) -> Result<HeaderBuilder> {
-        if id > (1 << 16) {
-            return Err(anyhow!("ID must be a 16-bit number"));
-        }
         self.id = Some(id);
         Ok(self)
     }
@@ -143,33 +140,21 @@ impl HeaderBuilder {
     }
 
     pub fn qdcount(mut self, qdcount: u16) -> Result<HeaderBuilder> {
-        if qdcount > (1 << 16) {
-            return Err(anyhow!("QDCOUNT must be a 16-bit number"));
-        }
         self.qdcount = Some(qdcount);
         Ok(self)
     }
 
     pub fn ancount(mut self, ancount: u16) -> Result<HeaderBuilder> {
-        if ancount > (1 << 16) {
-            return Err(anyhow!("ANCOUNT must be a 16-bit number"));
-        }
         self.ancount = Some(ancount);
         Ok(self)
     }
 
     pub fn nscount(mut self, nscount: u16) -> Result<HeaderBuilder> {
-        if nscount > (1 << 16) {
-            return Err(anyhow!("NSCOUNT must be a 16-bit number"));
-        }
         self.nscount = Some(nscount);
         Ok(self)
     }
 
     pub fn arcount(mut self, arcount: u16) -> Result<HeaderBuilder> {
-        if arcount > (1 << 16) {
-            return Err(anyhow!("ARCOUNT must be a 16-bit number"));
-        }
         self.arcount = Some(arcount);
         Ok(self)
     }

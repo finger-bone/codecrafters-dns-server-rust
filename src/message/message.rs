@@ -22,17 +22,22 @@ impl Message {
 
     pub fn decode(bytes: &[u8]) -> Self {
         let header = Header::decode(bytes).unwrap();
-        let header_offset = 12;
-        let questions = Question::decode(
-            &bytes[header_offset..], 
+        let mut offset = 12;
+        let (questions, question_len) = Question::decode(
+            &bytes[offset..], 
             header.qdcount as usize,
-            header_offset,
+            offset,
+        );
+        offset += question_len;
+        let answers = Answer::decode(
+            &bytes[offset..],
+            header.ancount as usize,
         );
 
         Message {
             header: header,
             questions: questions,
-            answers: vec![]
+            answers: answers
         }
     }
 }

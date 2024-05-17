@@ -32,6 +32,46 @@ impl Answer {
     pub fn builder() -> AnswerBuilder {
         AnswerBuilder::new()
     }
+
+    pub fn decode(bytes: &[u8], ancount: usize) -> Vec<Answer> {
+        let mut cur = 0;
+        let mut cnt = 0;
+
+        let mut answers = vec![];
+
+        while cnt < ancount {
+            let mut name: Vec<u8> = vec![];
+            while bytes[cur] != 0 {
+                let length = bytes[cur] as usize;
+                name.extend(
+                    &bytes[cur..=cur+length]
+                );
+                cur += length + 1;
+            }
+            cur += 1;
+            let atype = ((bytes[cur] as u16) << 8) | bytes[cur + 1] as u16;
+            cur += 2;
+            let aclass = ((bytes[cur] as u16) << 8) | bytes[cur + 1] as u16;
+            cur += 2;
+            let ttl = ((bytes[cur] as u32) << 24) | ((bytes[cur + 1] as u32) << 16) | ((bytes[cur + 2] as u32) << 8) | bytes[cur + 3] as u32;
+            cur += 4;
+            let length = ((bytes[cur] as u16) << 8) | bytes[cur + 1] as u16;
+            cur += 2;
+            let data = bytes[cur..cur + length as usize].to_vec();
+            cur += length as usize + 1;
+            answers.push(Answer {
+                name: name,
+                qtype: atype,
+                qclass: aclass,
+                ttl: ttl,
+                length: length,
+                data: data,
+            });
+            cnt += 1;
+        }
+
+        answers
+    }
 }
 
 pub struct AnswerBuilder {

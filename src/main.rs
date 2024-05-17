@@ -1,71 +1,33 @@
-mod message;
+pub mod response;
+pub mod message;
 
 use std::net::UdpSocket;
-
-use crate::message::*;
-
-fn build_response(request: Message) -> Message {
-    let mut answers = vec![];
-    let mut questions = vec![];
-
-    for question in request.questions {
-
-        let response_question = Question::builder()
-            .name_bytes(question.name.clone())
-            .unwrap()
-            .build();
-        let response_answer = Answer::builder()
-            .name_bytes(question.name.clone())
-            .unwrap()
-            .qtype(question.qtype)
-            .unwrap()
-            .qclass(question.qclass)
-            .unwrap()
-            .ttl(60)
-            .unwrap()
-            .length(4)
-            .unwrap()
-            .data(vec![8, 8, 8, 8])
-            .unwrap()
-            .build();
-        questions.push(response_question);
-        answers.push(response_answer);
-    }
-
-    Message {
-        header: Header::builder()
-            .qdcount(questions.len() as u16)
-            .unwrap()
-            .ancount(answers.len() as u16)
-            .unwrap()
-            .id(request.header.id)
-            .unwrap()
-            .opcode(request.header.opcode)
-            .unwrap()
-            .rd(request.header.rd)
-            .unwrap()
-            .rcode(if request.header.opcode == 0 { 0 } else { 4 })
-            .unwrap()
-            .build(),
-        questions: questions,
-        answers: answers,
-    }
-}
+use std::env;
+use crate::{message::*, response::{build_response, build_response_forward}};
 
 fn main() {
     let udp_socket = UdpSocket::bind("127.0.0.1:2053").expect("Failed to bind to address");
     let mut buf = [0; 512];
     
+    let args: Vec<String> = env::args().collect();
+
     loop {
+        println!("Waiting for data...");
         match udp_socket.recv_from(&mut buf) {
             Ok((size, source)) => {
                 println!("Received {} bytes from {}", size, source);
 
                 let request = Message::decode(&buf);
-                println!("Got Request {:#?}", request);
 
-                let response = build_response(request);
-                println!("Responding With: {:#?}", response);
+                let response = if args.len() == 1 {
+                    println!("Directly building response.");
+                    build_response(request)
+                } else {
+                    println!("Forwarding request to resolver.");
+                    build_response_forward(request, args[2].clone(), &udp_socket)
+                };
+
+                println!("Response built, sending to {}", source);
 
                 udp_socket
                     .send_to(&response.encode(), source)

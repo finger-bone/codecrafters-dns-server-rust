@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use anyhow::{Result, Ok};
 
 #[derive(Debug)]
+#[derive(Clone)]
 pub struct Question {
     pub name: Vec<u8>,
     pub qtype: u16,
@@ -26,7 +27,7 @@ impl Question {
         QuestionBuilder::new()
     }
 
-    pub fn decode(bytes: &[u8], qncount: usize, header_offset: usize) -> Vec<Question> {
+    pub fn decode(bytes: &[u8], qncount: usize, header_offset: usize) -> (Vec<Question>, usize) {
         #[derive(Debug)]
         enum LabelOrPointer {
             Label(Vec<u8>),
@@ -35,7 +36,8 @@ impl Question {
             QClass(Vec<u8>),
             Stop,
         }
-        let mut tokens = vec![];
+
+        let mut tokens: Vec<LabelOrPointer> = vec![];
         let mut cur = 0;
         let mut cnt = 0;
         let mut label_index = HashMap::new();
@@ -178,7 +180,7 @@ impl Question {
             });
         }
 
-        questions
+        (questions, cur)
     }
 
     pub fn len(&self) -> usize {
